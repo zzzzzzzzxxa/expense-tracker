@@ -19,6 +19,34 @@
                 transform: translateX(-100%);
             }
         }
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .stagger-animation > * {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        /* Динамическая задержка для элементов списка */
+        .stagger-animation > *:nth-child(1) { animation-delay: 0.05s; }
+        .stagger-animation > *:nth-child(2) { animation-delay: 0.1s; }
+        .stagger-animation > *:nth-child(3) { animation-delay: 0.15s; }
+        /* ... и так далее, можно добавить больше */
+        /* Анимации для уведомлений (toast) */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        .toast-in { animation: slideInRight 0.5s ease-out forwards; }
+        .toast-out { animation: slideOutRight 0.5s ease-in forwards; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -33,7 +61,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <span class="text-xl font-bold">ТрекерРасходов</span>
+                    <span class="text-xl font-bold text-white">ТрекерРасходов</span>
                 </div>
             </div>
 
@@ -107,20 +135,20 @@
             <form id="transaction-form" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Тип</label>
-                    <select id="transaction-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <select id="transaction-type" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="expense">Расход</option>
                         <option value="income">Доход</option>
                     </select>
                 </div>
                 <div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="col-span-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
                             <label for="transaction-amount" class="block text-sm font-medium text-gray-700 mb-2">Сумма</label>
-                            <input type="number" step="0.01" id="transaction-amount" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                            <input type="number" step="0.01" id="transaction-amount" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0.00">
                         </div>
                         <div>
                             <label for="transaction-currency" class="block text-sm font-medium text-gray-700 mb-2">Валюта</label>
-                            <select id="transaction-currency" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-full">
+                            <select id="transaction-currency" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-full">
                                 <option value="KGS" selected>KGS</option>
                                 <option value="USD">USD</option>
                                 <option value="EUR">EUR</option>
@@ -133,11 +161,11 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
-                    <input type="text" id="transaction-description" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите описание">
+                    <input type="text" id="transaction-description" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите описание">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Категория</label>
-                    <select id="transaction-category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <select id="transaction-category" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <!-- Категории будут загружены здесь -->
                     </select>
                 </div>
@@ -163,20 +191,20 @@
                 <input type="hidden" id="edit-transaction-id">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Тип</label>
-                    <select id="edit-transaction-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <select id="edit-transaction-type" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="expense">Расход</option>
                         <option value="income">Доход</option>
                     </select>
                 </div>
                 <div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="col-span-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
                             <label for="edit-transaction-amount" class="block text-sm font-medium text-gray-700 mb-2">Сумма</label>
-                            <input type="number" step="0.01" id="edit-transaction-amount" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                            <input type="number" step="0.01" id="edit-transaction-amount" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0.00">
                         </div>
                         <div>
                             <label for="edit-transaction-currency" class="block text-sm font-medium text-gray-700 mb-2">Валюта</label>
-                            <select id="edit-transaction-currency" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-full">
+                            <select id="edit-transaction-currency" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-full">
                                 <option value="KGS" selected>KGS</option>
                                 <option value="USD">USD</option>
                                 <option value="EUR">EUR</option>
@@ -189,15 +217,15 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
-                    <input type="text" id="edit-transaction-description" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите описание">
+                    <input type="text" id="edit-transaction-description" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите описание">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Категория</label>
-                    <select id="edit-transaction-category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></select>
+                    <select id="edit-transaction-category" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></select>
                 </div>
                 <div>
                     <label for="edit-transaction-date" class="block text-sm font-medium text-gray-700 mb-2">Дата</label>
-                    <input type="date" id="edit-transaction-date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="date" id="edit-transaction-date" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
                 <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition">
                     Сохранить изменения
@@ -220,7 +248,7 @@
             <form id="category-form" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Название категории</label>
-                    <input type="text" id="category-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите название категории">
+                    <input type="text" id="category-name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите название категории">
                 </div>
                 <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition">
                     Добавить категорию
@@ -244,7 +272,7 @@
                 <input type="hidden" id="edit-category-id">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Название категории</label>
-                    <input type="text" id="edit-category-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите новое название">
+                    <input type="text" id="edit-category-name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите новое название">
                 </div>
                 <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition">
                     Сохранить изменения
@@ -253,8 +281,15 @@
         </div>
     </div>
 
+    <!-- Notification Container -->
+    <div id="notification-container" class="fixed top-5 right-5 z-50 space-y-3 w-full max-w-xs">
+        <!-- Уведомления будут добавляться сюда -->
+    </div>
+
 
     <script>
+        // =================================================================================
+        // --- State ---
         let currentView = 'overview';
         let categories = [];
         let transactions = [];
@@ -267,6 +302,8 @@
         // Основная валюта для расчетов в KGS - USD
         let USD_TO_KGS_RATE = exchangeRates.USD;
 
+        // =================================================================================
+        // --- Initialization ---
         // Initialize
         async function init() {
             await loadExchangeRate();
@@ -277,6 +314,8 @@
             renderView();
         }
 
+        // =================================================================================
+        // --- Data Loading ---
         // Load exchange rate from server
         async function loadExchangeRate() {
             try {
@@ -344,15 +383,56 @@
         }
 
         // Load analytics
-        async function loadAnalytics() {
+        async function loadAnalytics(period = 'all') {
+            const params = new URLSearchParams();
+            const today = new Date();
+            if (period === 'month') {
+                params.append('start_date', new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0]);
+                params.append('end_date', today.toISOString().split('T')[0]);
+            } else if (period === 'year') {
+                params.append('start_date', new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0]);
+                params.append('end_date', today.toISOString().split('T')[0]);
+            }
+
+            const queryString = params.toString();
+            const url = `/api/analytics${queryString ? '?' + queryString : ''}`;
+
             try {
-                const response = await fetch('/api/analytics');
+                const response = await fetch(url);
                 if (response.ok) {
                     analytics = await response.json();
                 }
             } catch (error) {
-                console.error('Ошибка загрузки аналитики:', error);
+                console.error('Ошибка загрузки аналитики:', error, url);
             }
+        }
+
+        // =================================================================================
+        // --- UI Rendering ---
+        /**
+         * Показывает всплывающее уведомление.
+         * @param {string} message - Текст сообщения.
+         * @param {string} type - 'success' (успех) или 'error' (ошибка).
+         */
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+
+            const isSuccess = type === 'success';
+            const bgColor = isSuccess ? 'bg-green-500' : 'bg-red-500';
+            const icon = isSuccess 
+                ? `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                : `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+
+            notification.className = `flex items-center p-4 text-white rounded-lg shadow-lg ${bgColor} toast-in`;
+            notification.innerHTML = `<div class="flex-shrink-0">${icon}</div><div class="ml-3 text-sm font-medium">${message}</div>`;
+
+            container.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.replace('toast-in', 'toast-out');
+                notification.addEventListener('animationend', () => notification.remove());
+            }, 3000); // Уведомление исчезает через 3 секунды
         }
 
         // Update category select
@@ -403,11 +483,19 @@
             const recentTransactions = transactions.slice(0, 5);
             
             return `
-                <div class="mb-8">
+                <div class="mb-8 flex flex-col md:flex-row justify-between md:items-center animate-fade-in">
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Обзор панели управления</h1>
+                    <div class="mt-4 md:mt-0">
+                        <label for="analytics-period" class="sr-only">Период</label>
+                        <select id="analytics-period" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full md:w-auto p-2.5">
+                            <option value="all" selected>За все время</option>
+                            <option value="month">Текущий месяц</option>
+                            <option value="year">Текущий год</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="mb-6 text-sm text-gray-600 bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                <div class="mb-6 text-sm text-gray-600 bg-white p-3 rounded-lg shadow-sm border border-gray-200 animate-fade-in" style="animation-delay: 0.1s;">
                     Курсы НБКР на сегодня: 
                     <strong class="font-semibold text-gray-800">1 USD = ${exchangeRates.USD.toFixed(4)} KGS</strong> | 
                     <strong class="font-semibold text-gray-800">1 EUR = ${exchangeRates.EUR.toFixed(4)} KGS</strong> | 
@@ -417,8 +505,8 @@
                 </div>
 
                 <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 stagger-animation" style="animation-delay: 0.2s;">
+                    <div class="bg-white rounded-xl shadow-lg p-6" style="animation-delay: 0.2s;">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">Текущий баланс</p>
@@ -432,7 +520,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="bg-white rounded-xl shadow-lg p-6" style="animation-delay: 0.3s;">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">Общий доход</p>
@@ -446,7 +534,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="bg-white rounded-xl shadow-lg p-6" style="animation-delay: 0.4s;">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-600 mb-1">Общие расходы</p>
@@ -462,11 +550,11 @@
                 </div>
 
                 <!-- Two Panels -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 stagger-animation" style="animation-delay: 0.5s;">
                     <!-- Recent Transactions -->
-                    <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="bg-white rounded-xl shadow-lg p-6" style="animation-delay: 0.5s;">
                         <h2 class="text-xl font-bold text-gray-900 mb-4">Недавние транзакции</h2>
-                        <div class="space-y-3">
+                        <div class="space-y-3 stagger-animation">
                             ${recentTransactions.length > 0 ? recentTransactions.map(t => `
                                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                     <div class="flex-1">
@@ -482,7 +570,7 @@
                     </div>
 
                     <!-- Expenses by Category Chart -->
-                    <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="bg-white rounded-xl shadow-lg p-6" style="animation-delay: 0.6s;">
                         <h2 class="text-xl font-bold text-gray-900 mb-4">Расходы по категориям</h2>
                         <div class="flex items-center justify-center" style="height: 300px;">
                             <canvas id="expense-chart"></canvas>
@@ -505,7 +593,7 @@
             const data = analytics.expenses_by_category || [];
 
             if (data.length === 0) {
-                ctx.font = '16px Inter';
+                ctx.font = '16px Inter, sans-serif';
                 ctx.fillStyle = '#9CA3AF';
                 ctx.textAlign = 'center';
                 ctx.fillText('Нет данных о расходах', canvas.width / 2, canvas.height / 2);
@@ -530,6 +618,7 @@
                     plugins: {
                         legend: {
                             position: 'bottom',
+                            labels: { color: '#374151' }
                         },
                         tooltip: {
                             callbacks: {
@@ -548,7 +637,7 @@
         // Render transactions
         function renderTransactions() {
             return `
-                <div class="mb-8 flex justify-between items-center">
+                <div class="mb-8 flex justify-between items-center animate-fade-in">
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Транзакции</h1>
                     <button id="add-transaction-btn" class="px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition shadow-lg text-sm md:text-base">
                         + Добавить транзакцию
@@ -556,7 +645,7 @@
                 </div>
 
                 <!-- Filters -->
-                <div class="bg-white p-4 rounded-xl shadow-lg mb-6">
+                <div class="bg-white p-4 rounded-xl shadow-lg mb-6 animate-fade-in" style="animation-delay: 0.1s;">
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                         <div class="md:col-span-2">
                             <label for="filter-category" class="block text-sm font-medium text-gray-700 mb-1">Категория</label>
@@ -573,16 +662,46 @@
                             <label for="filter-end-date" class="block text-sm font-medium text-gray-700 mb-1">По</label>
                             <input type="date" id="filter-end-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
-                        <div class="flex space-x-2">
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                             <button id="apply-filters-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Применить</button>
                             <button id="export-csv-btn" class="w-full bg-gray-600 text-white py-2 rounded-lg font-semibold hover:bg-gray-700 transition">Экспорт</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
+                <!-- Transactions List: Cards for mobile, Table for desktop -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden animate-fade-in" style="animation-delay: 0.2s;">
+                    <!-- Mobile Card View -->
+                    <div class="md:hidden divide-y divide-gray-200 stagger-animation">
+                        ${transactions.length > 0 ? transactions.map(t => `
+                            <div class="p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex-1 pr-4">
+                                        <p class="font-bold text-gray-900">${t.description}</p>
+                                        <p class="text-sm text-gray-500">${t.category_name || 'Без категории'}</p>
+                                    </div>
+                                    <span class="font-bold text-lg whitespace-nowrap ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                                        ${t.type === 'income' ? '+' : '-'}${formatPriceKgs(t.amount)}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm text-gray-500">
+                                    <span>${new Date(t.created_at).toLocaleDateString()}</span>
+                                    <div class="flex items-center space-x-4">
+                                        <button onclick="openEditModal(${t.id})" class="text-blue-600 hover:text-blue-800 font-medium">Редактировать</button>
+                                        <button onclick="deleteTransaction(${t.id})" class="text-red-600 hover:text-red-800 font-medium">Удалить</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('') : `
+                            <div class="px-6 py-12 text-center text-gray-500">
+                                Транзакций пока нет. Нажмите "Добавить транзакцию", чтобы начать.
+                            </div>
+                        `}
+                    </div>
+
+                    <!-- Desktop Table View -->
+                    <div class="hidden md:block overflow-x-auto">
+                        <table class="w-full min-w-full">
                             <thead class="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th class="px-4 py-3 md:px-6 md:py-4 text-left text-sm font-semibold text-gray-900">Дата</th>
@@ -596,9 +715,9 @@
                             <tbody class="divide-y divide-gray-200">
                                 ${transactions.length > 0 ? transactions.map(t => `
                                     <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-3 md:px-6 md:py-4 text-sm text-gray-600 whitespace-nowrap">${new Date(t.created_at).toLocaleDateString()}</td>
+                                        <td class="px-4 py-3 md:px-6 md:py-4 text-sm text-gray-600 whitespace-nowrap">${new Date(t.created_at).toLocaleDateString('ru-RU')}</td>
                                         <td class="px-4 py-3 md:px-6 md:py-4 text-sm font-medium text-gray-900">${t.description}</td>
-                                        <td class="px-4 py-3 md:px-6 md:py-4 text-sm text-gray-600">${t.category_name}</td>
+                                        <td class="px-4 py-3 md:px-6 md:py-4 text-sm text-gray-600">${t.category_name || 'Без категории'}</td>
                                         <td class="px-4 py-3 md:px-6 md:py-4">
                                             <span class="px-3 py-1 text-xs font-semibold rounded-full ${t.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                                                 ${t.type === 'income' ? 'Доход' : 'Расход'}
@@ -634,18 +753,18 @@
         // Render categories
         function renderCategories() {
             return `
-                <div class="mb-8 flex justify-between items-center">
+                <div class="mb-8 flex justify-between items-center animate-fade-in">
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Категории</h1>
                     <button id="add-category-btn" class="px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition shadow-lg text-sm md:text-base">
                         + Добавить категорию
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    ${categories.map(cat => `
-                        <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-animation">
+                    ${categories.length > 0 ? categories.map(cat => `
+                        <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 hover:shadow-xl transition flex flex-col">
                             <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-bold text-gray-900 truncate pr-2">${cat.name}</h3>
+                                <h3 class="text-lg md:text-xl font-bold text-gray-900 truncate pr-2">${cat.name}</h3>
                                 <div class="flex items-center space-x-2">
                                     <button onclick="openEditCategoryModal(${cat.id}, '${cat.name}')" class="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -659,9 +778,13 @@
                                     </button>
                                 </div>
                             </div>
-                            <p class="text-sm text-gray-500 mt-1">Создано ${new Date(cat.created_at).toLocaleDateString()}</p>
+                            <p class="text-sm text-gray-500 mt-auto">Создано ${new Date(cat.created_at).toLocaleDateString()}</p>
                         </div>
-                    `).join('')}
+                    `).join('') : `
+                        <div class="md:col-span-2 lg:col-span-3 text-center py-12 text-gray-500">
+                            <p>Категорий пока нет. Нажмите "Добавить категорию", чтобы начать.</p>
+                        </div>
+                    `}
                 </div>
             `;
         }
@@ -677,7 +800,7 @@
             // Previous button
             pagesHtml += `
                 <button 
-                    onclick="changePage(${currentPage - 1})" 
+                    onclick="changePage(${currentPage - 1})"
                     class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${currentPage === 1 ? 'cursor-not-allowed opacity-50' : ''}"
                     ${currentPage === 1 ? 'disabled' : ''}
                 >
@@ -690,7 +813,7 @@
             for (let i = 1; i <= totalPages; i++) {
                 pagesHtml += `
                     <button 
-                        onclick="changePage(${i})" 
+                        onclick="changePage(${i})"
                         class="relative inline-flex items-center px-4 py-2 text-sm font-semibold ${i === currentPage ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600' : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50'}"
                     >
                         ${i}
@@ -701,7 +824,7 @@
             // Next button
             pagesHtml += `
                 <button 
-                    onclick="changePage(${currentPage + 1})" 
+                    onclick="changePage(${currentPage + 1})"
                     class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${currentPage === totalPages ? 'cursor-not-allowed opacity-50' : ''}"
                     ${currentPage === totalPages ? 'disabled' : ''}
                 >
@@ -715,6 +838,8 @@
             `;
         }
 
+        // =================================================================================
+        // --- Modals and Actions ---
         // Open Edit Modal
         function openEditModal(id) {
             const transaction = transactions.find(t => t.id === id);
@@ -752,7 +877,6 @@
             renderView();
         }
 
-
         // Delete transaction
         async function deleteTransaction(id) {
             if (!confirm('Вы уверены, что хотите удалить эту транзакцию?')) return;
@@ -763,9 +887,12 @@
                 });
                 
                 if (response.ok) {
+                    showNotification('Транзакция успешно удалена');
                     await loadTransactions(paginationInfo.page);
                     await loadAnalytics();
                     renderView();
+                } else {
+                    showNotification('Ошибка при удалении транзакции', 'error');
                 }
             } catch (error) {
                 console.error('Ошибка удаления транзакции:', error);
@@ -774,7 +901,7 @@
 
         // Delete category
         async function deleteCategory(id) {
-            if (!confirm('Вы уверены, что хотите удалить эту категорию? Все связанные транзакции также будут удалены.')) return;
+            if (!confirm('Вы уверены, что хотите удалить эту категорию? Связанные транзакции не будут удалены, а станут "без категории".')) return;
             
             try {
                 const response = await fetch(`/api/categories/${id}`, {
@@ -782,17 +909,21 @@
                 });
                 
                 if (response.ok) {
+                    showNotification('Категория успешно удалена');
                     await loadCategories();
                     await loadTransactions(1); // Reset to first page
                     await loadAnalytics();
                     renderView();
+                } else {
+                    showNotification('Ошибка при удалении категории', 'error');
                 }
             } catch (error) {
                 console.error('Ошибка удаления категории:', error);
-                alert('Невозможно удалить категорию, в которой есть транзакции');
             }
         }
 
+        // =================================================================================
+        // --- Event Listeners ---
         // Event listeners
         function setupEventListeners() {
             // Navigation
@@ -853,6 +984,14 @@
                 }
             });
 
+            // Use event delegation for analytics period change
+            document.body.addEventListener('change', (e) => {
+                if (e.target.id === 'analytics-period') {
+                    const period = e.target.value;
+                    loadAnalytics(period).then(() => renderView());
+                }
+            });
+
             // Close modals
             document.getElementById('close-modal').addEventListener('click', () => document.getElementById('transaction-modal').classList.add('hidden'));
             document.getElementById('close-edit-modal').addEventListener('click', () => document.getElementById('edit-transaction-modal').classList.add('hidden'));
@@ -870,9 +1009,10 @@
             overlay.addEventListener('click', () => {
                 sidebar.classList.add('hidden-mobile');
                 overlay.classList.add('hidden');
-            })
+            });
         }
 
+        // =================================================================================
         // Setup static event listeners on page load
         document.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
@@ -923,11 +1063,14 @@
                 });
                 
                 if (response.ok) {
+                    showNotification('Транзакция успешно добавлена');
                     document.getElementById('transaction-modal').classList.add('hidden');
                     document.getElementById('transaction-form').reset();
                     await loadTransactions(1); // Go to first page to see the new item
                     await loadAnalytics();
                     renderView();
+                } else {
+                    showNotification('Ошибка при добавлении транзакции', 'error');
                 }
             } catch (error) {
                 console.error('Ошибка добавления транзакции:', error);
@@ -950,10 +1093,13 @@
                 });
                 
                 if (response.ok) {
+                    showNotification('Категория успешно добавлена');
                     document.getElementById('category-modal').classList.add('hidden');
                     document.getElementById('category-form').reset();
                     await loadCategories();
                     renderView();
+                } else {
+                    showNotification('Ошибка при добавлении категории', 'error');
                 }
             } catch (error) {
                 console.error('Ошибка добавления категории:', error);
@@ -977,6 +1123,7 @@
                 });
 
                 if (response.ok) {
+                    showNotification('Категория успешно обновлена');
                     document.getElementById('edit-category-modal').classList.add('hidden');
                     document.getElementById('edit-category-form').reset();
                     // Перезагружаем категории и транзакции, так как имя могло измениться
@@ -984,6 +1131,7 @@
                     await loadTransactions(); 
                     renderView();
                 } else {
+                    showNotification('Ошибка при обновлении категории', 'error');
                     console.error('Ошибка при обновлении категории:', await response.text());
                 }
             } catch (error) {
@@ -1033,12 +1181,14 @@
                 });
 
                 if (response.ok) {
+                    showNotification('Транзакция успешно обновлена');
                     document.getElementById('edit-transaction-modal').classList.add('hidden');
                     document.getElementById('edit-transaction-form').reset();
                     await loadTransactions(paginationInfo.page);
                     await loadAnalytics();
                     renderView();
                 } else {
+                    showNotification('Ошибка при обновлении транзакции', 'error');
                     console.error('Ошибка при обновлении транзакции:', await response.text());
                 }
             } catch (error) {

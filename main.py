@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, Stre
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, func
+import os
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from datetime import datetime, timedelta, date
@@ -21,9 +22,16 @@ SECRET_KEY = "your-secret-key-change-in-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 43200  # 30 days
 
+# Определяем URL базы данных. Приоритет у переменной окружения для продакшена.
+DATABASE_URL_ENV = os.getenv("DATABASE_URL")
+if DATABASE_URL_ENV and DATABASE_URL_ENV.startswith("postgres://"):
+    # SQLAlchemy 1.4+ требует 'postgresql://' вместо 'postgres://'
+    DATABASE_URL_ENV = DATABASE_URL_ENV.replace("postgres://", "postgresql://", 1)
+
+SQLALCHEMY_DATABASE_URL = DATABASE_URL_ENV or "sqlite:///./tracker.db"
+
 # Database setup
-SQLALCHEMY_DATABASE_URL = "sqlite:///./tracker.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL else {})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -156,11 +164,11 @@ def seed_database():
             
             # Create default categories
             categories = [
-                Category(name="Food", user_id=user.id),
-                Category(name="Transport", user_id=user.id),
-                Category(name="Salary", user_id=user.id),
-                Category(name="Entertainment", user_id=user.id),
-                Category(name="Utilities", user_id=user.id),
+                Category(name="Еда", user_id=user.id),
+                Category(name="Транспорт", user_id=user.id),
+                Category(name="Зарплата", user_id=user.id),
+                Category(name="Развлечения", user_id=user.id),
+                Category(name="Коммунальные услуги", user_id=user.id),
             ]
             db.add_all(categories)
             db.commit()
@@ -300,11 +308,11 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     
     # Create default categories for new user
     default_categories = [
-        Category(name="Food", user_id=user.id),
-        Category(name="Transport", user_id=user.id),
-        Category(name="Salary", user_id=user.id),
-        Category(name="Entertainment", user_id=user.id),
-        Category(name="Utilities", user_id=user.id),
+        Category(name="Еда", user_id=user.id),
+        Category(name="Транспорт", user_id=user.id),
+        Category(name="Зарплата", user_id=user.id),
+        Category(name="Развлечения", user_id=user.id),
+        Category(name="Коммунальные услуги", user_id=user.id),
     ]
     db.add_all(default_categories)
     db.commit()
@@ -374,6 +382,12 @@ async def delete_category(
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     
+    # Set category_id to NULL for all associated transactions
+    db.query(Transaction).filter(
+        Transaction.category_id == category_id,
+        Transaction.user_id == user.id
+    ).update({"category_id": None})
+
     db.delete(category)
     db.commit()
     return {"message": "Category deleted successfully"}
@@ -586,29 +600,49 @@ async def delete_transaction(
 
 # API Routes - Analytics
 @app.get("/api/analytics")
-async def get_analytics(user: User = Depends(require_auth), db: Session = Depends(get_db)):
-    total_income = db.query(func.sum(Transaction.amount)).filter(
+async def get_analytics(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    user: User = Depends(require_auth), 
+    db: Session = Depends(get_db)
+):
+    # Base queries
+    income_query = db.query(func.sum(Transaction.amount)).filter(
         Transaction.user_id == user.id,
         Transaction.type == "income"
-    ).scalar() or 0
-    
-    total_expenses = db.query(func.sum(Transaction.amount)).filter(
+    )
+    expenses_query = db.query(func.sum(Transaction.amount)).filter(
         Transaction.user_id == user.id,
         Transaction.type == "expense"
-    ).scalar() or 0
-    
-    balance = total_income - total_expenses
-    
-    expenses_by_category = db.query(
+    )
+    expenses_by_category_query = db.query(
         Category.name,
         func.sum(Transaction.amount).label("total")
     ).join(Transaction).filter(
         Transaction.user_id == user.id,
         Transaction.type == "expense"
-    ).group_by(Category.name).all()
-    
+    )
+
+    # Apply date filters if provided
+    if start_date:
+        income_query = income_query.filter(Transaction.created_at >= start_date)
+        expenses_query = expenses_query.filter(Transaction.created_at >= start_date)
+        expenses_by_category_query = expenses_by_category_query.filter(Transaction.created_at >= start_date)
+
+    if end_date:
+        end_of_day = datetime.combine(end_date, datetime.max.time())
+        income_query = income_query.filter(Transaction.created_at <= end_of_day)
+        expenses_query = expenses_query.filter(Transaction.created_at <= end_of_day)
+        expenses_by_category_query = expenses_by_category_query.filter(Transaction.created_at <= end_of_day)
+
+    # Execute queries
+    total_income = income_query.scalar() or 0
+    total_expenses = expenses_query.scalar() or 0
+    balance = total_income - total_expenses
+    expenses_by_category = expenses_by_category_query.group_by(Category.name).all()
+
     category_data = [{"category": cat, "amount": float(total)} for cat, total in expenses_by_category]
-    
+
     return {
         "balance": float(balance),
         "total_income": float(total_income),
