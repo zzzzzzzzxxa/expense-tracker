@@ -24,7 +24,7 @@
 <body class="bg-gray-100">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar w-64 bg-gray-800 text-white flex flex-col fixed md:relative h-full z-50">
+        <aside id="sidebar" class="sidebar w-64 bg-gray-800 text-white flex flex-col fixed md:relative h-full z-50 hidden-mobile">
             <!-- Logo -->
             <div class="p-6 border-b border-gray-700">
                 <div class="flex items-center space-x-3">
@@ -83,7 +83,7 @@
         </button>
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto md:ml-0 ml-0">
+        <main class="flex-1 overflow-y-auto">
             <div class="p-8" id="main-content">
                 <!-- Content will be loaded here -->
             </div>
