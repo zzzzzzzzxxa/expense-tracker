@@ -272,6 +272,11 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/login", status_code=303)
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
+@app.get("/health", status_code=status.HTTP_200_OK)
+async def health_check():
+    """Простой эндпоинт для проверки работоспособности сервиса."""
+    return {"status": "ok"}
+
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
