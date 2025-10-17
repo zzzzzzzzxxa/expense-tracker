@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request, Response, BackgroundTasks
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, func
@@ -7,6 +7,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
 from datetime import datetime, timedelta, date
 from typing import Optional, List
+import csv
+import io
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -401,12 +403,33 @@ async def update_category(
 # API Routes - Transactions
 @app.get("/api/transactions")
 async def get_transactions(
+    category_id: Optional[int] = None,
+    page: int = 1,
+    limit: int = 10,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     user: User = Depends(require_auth),
     db: Session = Depends(get_db)
 ):
-    transactions = db.query(Transaction).filter(
+    query = db.query(Transaction).filter(
         Transaction.user_id == user.id
-    ).order_by(Transaction.created_at.desc()).all()
+    )
+
+    if category_id:
+        query = query.filter(Transaction.category_id == category_id)
+    
+    if start_date:
+        query = query.filter(Transaction.created_at >= start_date)
+
+    if end_date:
+        # Включаем весь день до 23:59:59
+        end_of_day = datetime.combine(end_date, datetime.max.time())
+        query = query.filter(Transaction.created_at <= end_of_day)
+
+    # Получаем общее количество для пагинации перед применением limit/offset
+    total_count = query.count()
+
+    transactions = query.order_by(Transaction.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
     
     result = []
     for t in transactions:
@@ -420,7 +443,56 @@ async def get_transactions(
             "created_at": t.created_at.isoformat()
         })
     
-    return result
+    return {
+        "items": result,
+        "total": total_count,
+        "page": page,
+        "limit": limit,
+        "pages": (total_count + limit - 1) // limit
+    }
+
+@app.get("/api/transactions/export")
+async def export_transactions(
+    category_id: Optional[int] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    user: User = Depends(require_auth),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Transaction).filter(
+        Transaction.user_id == user.id
+    )
+
+    if category_id:
+        query = query.filter(Transaction.category_id == category_id)
+    
+    if start_date:
+        query = query.filter(Transaction.created_at >= start_date)
+
+    if end_date:
+        end_of_day = datetime.combine(end_date, datetime.max.time())
+        query = query.filter(Transaction.created_at <= end_of_day)
+
+    transactions = query.order_by(Transaction.created_at.desc()).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Write header
+    writer.writerow(["Date", "Description", "Category", "Type", "Amount (USD)"])
+
+    # Write data rows
+    for t in transactions:
+        writer.writerow([
+            t.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            t.description,
+            t.category.name if t.category else "N/A",
+            t.type,
+            t.amount
+        ])
+
+    output.seek(0)
+    return StreamingResponse(iter([output.getvalue()]), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=transactions.csv"})
 
 @app.post("/api/transactions")
 async def create_transaction(
