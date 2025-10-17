@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления - Трекер расходов</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        @media (max-width: 768px) {
+            .sidebar.hidden-mobile {
+                transform: translateX(-100%);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar w-64 bg-gray-800 text-white flex flex-col fixed md:relative h-full z-50">
+            <!-- Logo -->
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold">ТрекерРасходов</span>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" data-view="overview" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg bg-gray-700 text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    <span>Обзор</span>
+                </a>
+                <a href="#" data-view="transactions" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <span>Транзакции</span>
+                </a>
+                <a href="#" data-view="categories" class="nav-link flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                    <span>Категории</span>
+                </a>
+            </nav>
+
+            <!-- User Info -->
+            <div class="p-4 border-t border-gray-700">
+                <div class="flex items-center space-x-3 mb-3">
+                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span class="text-sm font-semibold" id="user-initial">U</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate" id="user-email">Загрузка...</p>
+                    </div>
+                </div>
+                <button id="logout-btn" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition">
+                    Выйти
+                </button>
+            </div>
+        </aside>
+
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="md:hidden fixed top-4 left-4 z-40 p-2 bg-gray-800 text-white rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto md:ml-0 ml-0">
+            <div class="p-8" id="main-content">
+                <!-- Content will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Add Transaction -->
+    <div id="transaction-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Добавить транзакцию</h2>
+                <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="transaction-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Тип</label>
+                    <select id="transaction-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="expense">Расход</option>
+                        <option value="income">Доход</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2">
+                            <label for="transaction-amount" class="block text-sm font-medium text-gray-700 mb-2">Сумма</label>
+                            <input type="number" step="0.01" id="transaction-amount" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label for="transaction-currency" class="block text-sm font-medium text-gray-700 mb-2">Валюта</label>
+                            <select id="transaction-currency" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-full">
+                                <option value="KGS" selected>KGS</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="RUB">RUB</option>
+                                <option value="KZT">KZT</option>
+                                <option value="CNY">CNY</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
+                    <input type="text" id="transaction-description" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите описание">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Категория</label>
+                    <select id="transaction-category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <!-- Категории будут загружены здесь -->
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition">
+                    Добавить транзакцию
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Edit Transaction -->
+    <div id="edit-transaction-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Редактировать транзакцию</h2>
+                <button id="close-edit-modal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="edit-transaction-form" class="space-y-4">
+                <input type="hidden" id="edit-transaction-id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Тип</label>
+                    <select id="edit-transaction-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="expense">Расход</option>
+                        <option value="income">Доход</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2">
+                            <label for="edit-transaction-amount" class="block text-sm font-medium text-gray-700 mb-2">Сумма</label>
+                            <input type="number" step="0.01" id="edit-transaction-amount" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label for="edit-transaction-currency" class="block text-sm font-medium text-gray-700 mb-2">Валюта</label>
+                            <select id="edit-transaction-currency" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-full">
+                                <option value="KGS" selected>KGS</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="RUB">RUB</option>
+                                <option value="KZT">KZT</option>
+                                <option value="CNY">CNY</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
+                    <input type="text" id="edit-transaction-description" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите описание">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Категория</label>
+                    <select id="edit-transaction-category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></select>
+                </div>
+                <div>
+                    <label for="edit-transaction-date" class="block text-sm font-medium text-gray-700 mb-2">Дата</label>
+                    <input type="date" id="edit-transaction-date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition">
+                    Сохранить изменения
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Add Category -->
+    <div id="category-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Добавить категорию</h2>
+                <button id="close-category-modal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="category-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Название категории</label>
+                    <input type="text" id="category-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите название категории">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition">
+                    Добавить категорию
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Edit Category -->
+    <div id="edit-category-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Редактировать категорию</h2>
+                <button id="close-edit-category-modal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="edit-category-form" class="space-y-4">
+                <input type="hidden" id="edit-category-id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Название категории</label>
+                    <input type="text" id="edit-category-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Введите новое название">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition">
+                    Сохранить изменения
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        let currentView = 'overview';
+        let categories = [];
+        let transactions = [];
+        let analytics = {};
+        let chartInstance = null;
+        let exchangeRates = { // Курсы по умолчанию, будут обновлены
+            "USD": 84.5, "EUR": 92.0, "RUB": 1.1, "KZT": 0.19, "CNY": 12.0
+        };
+        // Основная валюта для расчетов в KGS - USD
+        let USD_TO_KGS_RATE = exchangeRates.USD;
+
+        // Initialize
+        async function init() {
+            await loadExchangeRate();
+            await loadUserInfo();
+            await loadCategories();
+            await loadTransactions();
+            await loadAnalytics();
+            renderView();
+        }
+
+        // Load exchange rate from server
+        async function loadExchangeRate() {
+            try {
+                const response = await fetch('/api/rate');
+                if (response.ok) {
+                    const data = await response.json();
+                    exchangeRates = data.rates;
+                    USD_TO_KGS_RATE = data.rates.USD;
+                }
+            } catch (error) {
+                console.error('Не удалось загрузить курс валют, используется значение по умолчанию.', error);
+            }
+        }
+
+        // Load user info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('user-email').textContent = user.email;
+                    document.getElementById('user-initial').textContent = user.email.charAt(0).toUpperCase();
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки информации о пользователе:', error);
+            }
+        }
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                if (response.ok) {
+                    categories = await response.json();
+                    updateCategorySelect();
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки категорий:', error);
+            }
+        }
+
+        // Load transactions
+        async function loadTransactions() {
+            try {
+                const response = await fetch('/api/transactions');
+                if (response.ok) {
+                    transactions = await response.json();
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки транзакций:', error);
+            }
+        }
+
+        // Load analytics
+        async function loadAnalytics() {
+            try {
+                const response = await fetch('/api/analytics');
+                if (response.ok) {
+                    analytics = await response.json();
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки аналитики:', error);
+            }
+        }
+
+        // Update category select
+        function updateCategorySelect() {
+            const addSelect = document.getElementById('transaction-category');
+            const editSelect = document.getElementById('edit-transaction-category');
+            const optionsHtml = categories.map(cat => 
+                `<option value="${cat.id}">${cat.name}</option>`
+            ).join('');
+            addSelect.innerHTML = optionsHtml;
+            editSelect.innerHTML = optionsHtml;
+        }
+
+        /**
+         * Конвертирует и форматирует цену из USD в KGS.
+         * @param {number} priceInUsd - Цена в долларах США.
+         * @returns {string} - Отформатированная строка с ценой в сомах.
+         */
+        function formatPriceKgs(priceInUsd) {
+            if (typeof priceInUsd !== 'number' || isNaN(priceInUsd)) {
+                return '0,00 KGS';
+            }
+            const priceInKgs = priceInUsd * USD_TO_KGS_RATE;
+            const formatter = new Intl.NumberFormat('ru-KG', {
+                style: 'currency',
+                currency: 'KGS',
+                minimumFractionDigits: 2,
+            });
+            return formatter.format(priceInKgs);
+        }
+
+        // Render view
+        function renderView() {
+            const content = document.getElementById('main-content');
+            
+            if (currentView === 'overview') {
+                content.innerHTML = renderOverview();
+                renderChart();
+            } else if (currentView === 'transactions') {
+                content.innerHTML = renderTransactions();
+            } else if (currentView === 'categories') {
+                content.innerHTML = renderCategories();
+            }
+        }
+
+        // Render overview
+        function renderOverview() {
+            const recentTransactions = transactions.slice(0, 5);
+            
+            return `
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900">Обзор панели управления</h1>
+                </div>
+
+                <div class="mb-6 text-sm text-gray-600 bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                    Курсы НБКР на сегодня: 
+                    <strong class="font-semibold text-gray-800">1 USD = ${exchangeRates.USD.toFixed(4)} KGS</strong> | 
+                    <strong class="font-semibold text-gray-800">1 EUR = ${exchangeRates.EUR.toFixed(4)} KGS</strong> | 
+                    <strong class="font-semibold text-gray-800">1 RUB = ${exchangeRates.RUB.toFixed(4)} KGS</strong> | 
+                    <strong class="font-semibold text-gray-800">1 KZT = ${exchangeRates.KZT.toFixed(4)} KGS</strong> |
+                    <strong class="font-semibold text-gray-800">1 CNY = ${exchangeRates.CNY.toFixed(4)} KGS</strong>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Текущий баланс</p>
+                                <p class="text-3xl font-bold text-green-600">${formatPriceKgs(analytics.balance)}</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Общий доход</p>
+                                <p class="text-3xl font-bold text-blue-600">${formatPriceKgs(analytics.total_income)}</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Общие расходы</p>
+                                <p class="text-3xl font-bold text-red-600">${formatPriceKgs(analytics.total_expenses)}</p>
+                            </div>
+                            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two Panels -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Recent Transactions -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4">Недавние транзакции</h2>
+                        <div class="space-y-3">
+                            ${recentTransactions.length > 0 ? recentTransactions.map(t => `
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900">${t.description}</p>
+                                        <p class="text-sm text-gray-500">${t.category_name} • ${new Date(t.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                    <span class="font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                                        ${t.type === 'income' ? '+' : '-'}${formatPriceKgs(t.amount)}
+                                    </span>
+                                </div>
+                            `).join('') : '<p class="text-gray-500 text-center py-8">Транзакций пока нет</p>'}
+                        </div>
+                    </div>
+
+                    <!-- Expenses by Category Chart -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4">Расходы по категориям</h2>
+                        <div class="flex items-center justify-center" style="height: 300px;">
+                            <canvas id="expense-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render chart
+        function renderChart() {
+            const canvas = document.getElementById('expense-chart');
+            if (!canvas) return;
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            const data = analytics.expenses_by_category || [];
+
+            if (data.length === 0) {
+                ctx.font = '16px Inter';
+                ctx.fillStyle = '#9CA3AF';
+                ctx.textAlign = 'center';
+                ctx.fillText('Нет данных о расходах', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.map(d => d.category),
+                    datasets: [{
+                        data: data.map(d => d.amount * USD_TO_KGS_RATE),
+                        backgroundColor: [
+                            '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
+                            '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16'
+                        ],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.raw || 0;
+                                    return `${label}: ${formatPriceKgs(value / USD_TO_KGS_RATE)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render transactions
+        function renderTransactions() {
+            return `
+                <div class="mb-8 flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-gray-900">Транзакции</h1>
+                    <button id="add-transaction-btn" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition shadow-lg">
+                        + Добавить транзакцию
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Дата</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Описание</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Категория</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Тип</th>
+                                    <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">Сумма</th>
+                                    <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${transactions.length > 0 ? transactions.map(t => `
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 text-sm text-gray-600">${new Date(t.created_at).toLocaleDateString()}</td>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-900">${t.description}</td>
+                                        <td class="px-6 py-4 text-sm text-gray-600">${t.category_name}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-3 py-1 text-xs font-semibold rounded-full ${t.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                                ${t.type === 'income' ? 'Доход' : 'Расход'}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-bold text-right ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                                            ${t.type === 'income' ? '+' : '-'}${formatPriceKgs(t.amount)}
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button onclick="openEditModal(${t.id})" class="text-blue-600 hover:text-blue-800 font-medium text-sm mr-4">
+                                                Редактировать
+                                            </button>
+                                            <button onclick="deleteTransaction(${t.id})" class="text-red-600 hover:text-red-800 font-medium text-sm">
+                                                Удалить
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('') : `
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                            Транзакций пока нет. Нажмите "Добавить транзакцию", чтобы начать.
+                                        </td>
+                                    </tr>
+                                `}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render categories
+        function renderCategories() {
+            return `
+                <div class="mb-8 flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-gray-900">Категории</h1>
+                    <button id="add-category-btn" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition shadow-lg">
+                        + Добавить категорию
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${categories.map(cat => `
+                        <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-bold text-gray-900 truncate pr-2">${cat.name}</h3>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="openEditCategoryModal(${cat.id}, '${cat.name}')" class="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="deleteCategory(${cat.id})" class="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">Создано ${new Date(cat.created_at).toLocaleDateString()}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const transaction = transactions.find(t => t.id === id);
+            if (!transaction) return;
+
+            document.getElementById('edit-transaction-id').value = transaction.id;
+            // Сохраняем оригинальную сумму в USD в data-атрибуте
+            document.getElementById('edit-transaction-form').dataset.originalAmountUsd = transaction.amount;
+            document.getElementById('edit-transaction-type').value = transaction.type;
+            document.getElementById('edit-transaction-description').value = transaction.description;            
+            document.getElementById('edit-transaction-category').value = transaction.category_id;
+
+            // Устанавливаем дату в формате YYYY-MM-DD
+            const date = new Date(transaction.created_at);
+            document.getElementById('edit-transaction-date').value = date.toISOString().split('T')[0];
+
+            // По умолчанию показываем сумму для редактирования в сомах (KGS)
+            const amountInKgs = transaction.amount * exchangeRates.USD;
+            document.getElementById('edit-transaction-amount').value = amountInKgs.toFixed(2);
+            document.getElementById('edit-transaction-currency').value = 'KGS';
+
+            document.getElementById('edit-transaction-modal').classList.remove('hidden');
+        }
+
+        // Open Edit Category Modal
+        function openEditCategoryModal(id, name) {
+            document.getElementById('edit-category-id').value = id;
+            document.getElementById('edit-category-name').value = name;
+            document.getElementById('edit-category-modal').classList.remove('hidden');
+        }
+
+
+        // Delete transaction
+        async function deleteTransaction(id) {
+            if (!confirm('Вы уверены, что хотите удалить эту транзакцию?')) return;
+            
+            try {
+                const response = await fetch(`/api/transactions/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    await loadTransactions();
+                    await loadAnalytics();
+                    renderView();
+                }
+            } catch (error) {
+                console.error('Ошибка удаления транзакции:', error);
+            }
+        }
+
+        // Delete category
+        async function deleteCategory(id) {
+            if (!confirm('Вы уверены, что хотите удалить эту категорию? Все связанные транзакции также будут удалены.')) return;
+            
+            try {
+                const response = await fetch(`/api/categories/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    await loadCategories();
+                    await loadTransactions();
+                    await loadAnalytics();
+                    renderView();
+                }
+            } catch (error) {
+                console.error('Ошибка удаления категории:', error);
+                alert('Невозможно удалить категорию, в которой есть транзакции');
+            }
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentView = link.dataset.view;
+                    
+                    // Update active state
+                    document.querySelectorAll('.nav-link').forEach(l => {
+                        l.classList.remove('bg-gray-700', 'text-white');
+                        l.classList.add('text-gray-300');
+                    });
+                    link.classList.add('bg-gray-700', 'text-white');
+                    link.classList.remove('text-gray-300');
+                    
+                    renderView();
+                });
+            });
+
+            // Use event delegation for buttons that are re-rendered
+            document.body.addEventListener('click', (e) => {
+                // Add transaction button
+                if (e.target.id === 'add-transaction-btn' || e.target.closest('#add-transaction-btn')) {
+                    document.getElementById('transaction-modal').classList.remove('hidden');
+                }
+
+                // Add category button
+                if (e.target.id === 'add-category-btn' || e.target.closest('#add-category-btn')) {
+                    document.getElementById('category-modal').classList.remove('hidden');
+                }
+            });
+
+            // Close modals
+            document.getElementById('close-modal').addEventListener('click', () => document.getElementById('transaction-modal').classList.add('hidden'));
+            document.getElementById('close-edit-modal').addEventListener('click', () => document.getElementById('edit-transaction-modal').classList.add('hidden'));
+            document.getElementById('close-category-modal').addEventListener('click', () => document.getElementById('category-modal').classList.add('hidden'));
+            document.getElementById('close-edit-category-modal').addEventListener('click', () => document.getElementById('edit-category-modal').classList.add('hidden'));
+
+            // Mobile menu
+            document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('hidden-mobile');
+            });
+        }
+
+        // Setup static event listeners on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            // Initialize app
+            init();
+        });
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Ошибка при выходе из системы:', error);
+            }
+        });
+
+        // Transaction form
+        document.getElementById('transaction-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('transaction-amount').value);
+            const currency = document.getElementById('transaction-currency').value;
+            let amountInUsd;
+
+            if (currency === 'KGS') {
+                amountInUsd = amount / exchangeRates.USD;
+            } else if (currency === 'USD') {
+                amountInUsd = amount;
+            } else {
+                // Конвертируем сумму из указанной валюты в KGS, а затем в USD
+                const amountInKgs = amount * exchangeRates[currency];
+                amountInUsd = amountInKgs / exchangeRates.USD;
+            }
+
+            const data = {
+                type: document.getElementById('transaction-type').value,
+                amount: amountInUsd,
+                description: document.getElementById('transaction-description').value,
+                category_id: parseInt(document.getElementById('transaction-category').value)
+            };
+            
+            try {
+                const response = await fetch('/api/transactions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    document.getElementById('transaction-modal').classList.add('hidden');
+                    document.getElementById('transaction-form').reset();
+                    await loadTransactions();
+                    await loadAnalytics();
+                    renderView();
+                }
+            } catch (error) {
+                console.error('Ошибка добавления транзакции:', error);
+            }
+        });
+
+        // Category form
+        document.getElementById('category-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('category-name').value
+            };
+            
+            try {
+                const response = await fetch('/api/categories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    document.getElementById('category-modal').classList.add('hidden');
+                    document.getElementById('category-form').reset();
+                    await loadCategories();
+                    renderView();
+                }
+            } catch (error) {
+                console.error('Ошибка добавления категории:', error);
+            }
+        });
+
+        // Edit Category form
+        document.getElementById('edit-category-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('edit-category-id').value;
+            const data = {
+                name: document.getElementById('edit-category-name').value
+            };
+
+            try {
+                const response = await fetch(`/api/categories/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    document.getElementById('edit-category-modal').classList.add('hidden');
+                    document.getElementById('edit-category-form').reset();
+                    // Перезагружаем категории и транзакции, так как имя могло измениться
+                    await loadCategories();
+                    await loadTransactions(); 
+                    renderView();
+                } else {
+                    console.error('Ошибка при обновлении категории:', await response.text());
+                }
+            } catch (error) {
+                console.error('Ошибка при обновлении категории:', error);
+            }
+        });
+
+
+        // Edit Transaction form
+        document.getElementById('edit-transaction-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('edit-transaction-id').value;
+            const form = document.getElementById('edit-transaction-form');
+            const amount = parseFloat(document.getElementById('edit-transaction-amount').value);
+            const currency = document.getElementById('edit-transaction-currency').value;
+            const originalAmountUsd = parseFloat(form.dataset.originalAmountUsd);
+            let amountInUsd;
+            
+            // Получаем дату из инпута и добавляем текущее время, чтобы создать полный ISO-8601 timestamp
+            const dateValue = document.getElementById('edit-transaction-date').value;
+            const newDate = new Date(dateValue);
+            const transactionDate = new Date(newDate.getTime() - (newDate.getTimezoneOffset() * 60000)).toISOString();
+
+            // Конвертация суммы
+            if (currency === 'USD') {
+                amountInUsd = amount;
+            } else {
+                // Конвертируем сумму из указанной валюты в KGS, а затем в USD
+                const amountInKgs = amount * exchangeRates[currency];
+                amountInUsd = amountInKgs / exchangeRates.USD;
+            }
+
+            const data = {
+                type: document.getElementById('edit-transaction-type').value,
+                amount: amountInUsd,
+                description: document.getElementById('edit-transaction-description').value,
+                category_id: parseInt(document.getElementById('edit-transaction-category').value),
+                created_at: transactionDate
+            };
+
+            try {
+                const response = await fetch(`/api/transactions/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    document.getElementById('edit-transaction-modal').classList.add('hidden');
+                    document.getElementById('edit-transaction-form').reset();
+                    await loadTransactions();
+                    await loadAnalytics();
+                    renderView();
+                } else {
+                    console.error('Ошибка при обновлении транзакции:', await response.text());
+                }
+            } catch (error) {
+                console.error('Ошибка при обновлении транзакции:', error);
+            }
+        });
+
+    </script>
+</body>
+</html>

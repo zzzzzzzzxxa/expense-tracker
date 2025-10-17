@@ -1,0 +1,10 @@
+# База данных
+tracker.db
+
+# Кэш Python
+__pycache__/
+*.pyc
+
+#  IDE 
+.vscode/
+.idea/
