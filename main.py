@@ -378,7 +378,6 @@ async def update_category(
     user: User = Depends(require_auth),
     db: Session = Depends(get_db)
 ):
-    # Найти категорию
     db_category = db.query(Category).filter(
         Category.id == category_id,
         Category.user_id == user.id
@@ -387,7 +386,6 @@ async def update_category(
     if not db_category:
         raise HTTPException(status_code=404, detail="Категория не найдена")
 
-    # Обновить поля
     db_category.name = category_data.name
     db.commit()
     db.refresh(db_category)
@@ -462,7 +460,6 @@ async def update_transaction(
     user: User = Depends(require_auth),
     db: Session = Depends(get_db)
 ):
-    # Find the transaction
     db_transaction = db.query(Transaction).filter(
         Transaction.id == transaction_id,
         Transaction.user_id == user.id
@@ -480,7 +477,6 @@ async def update_transaction(
     if not category:
         raise HTTPException(status_code=404, detail="Категория не найдена")
 
-    # Update fields
     db_transaction.amount = transaction_data.amount
     db_transaction.description = transaction_data.description
     db_transaction.type = transaction_data.type
@@ -514,7 +510,6 @@ async def delete_transaction(
 # API Routes - Analytics
 @app.get("/api/analytics")
 async def get_analytics(user: User = Depends(require_auth), db: Session = Depends(get_db)):
-    # Calculate totals
     total_income = db.query(func.sum(Transaction.amount)).filter(
         Transaction.user_id == user.id,
         Transaction.type == "income"
@@ -527,7 +522,6 @@ async def get_analytics(user: User = Depends(require_auth), db: Session = Depend
     
     balance = total_income - total_expenses
     
-    # Get expenses by category
     expenses_by_category = db.query(
         Category.name,
         func.sum(Transaction.amount).label("total")
