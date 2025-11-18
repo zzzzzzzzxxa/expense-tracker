@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request, Response, BackgroundTasks
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, func
@@ -14,7 +14,6 @@ from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import httpx
-import asyncio
 from lxml import etree as ET
 
 # Configuration
@@ -25,8 +24,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 43200  # 30 days
 # Определяем URL базы данных. Приоритет у переменной окружения для продакшена.
 DATABASE_URL_ENV = os.getenv("DATABASE_URL")
 if DATABASE_URL_ENV and DATABASE_URL_ENV.startswith("postgres://"):
-    # SQLAlchemy 1.4+ требует 'postgresql://' вместо 'postgres://'
-    DATABASE_URL_ENV = DATABASE_URL_ENV.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL_ENV = DATABASE_URL_ENV.replace("postgres://", "postgresql://", 1) # SQLAlchemy 1.4+ requires 'postgresql://'
 
 SQLALCHEMY_DATABASE_URL = DATABASE_URL_ENV or "sqlite:///./tracker.db"
 
@@ -74,9 +72,6 @@ class Transaction(Base):
     
     user = relationship("User", back_populates="transactions")
     category = relationship("Category", back_populates="transactions")
-
-# Create tables
-Base.metadata.create_all(bind=engine)
 
 # Pydantic models
 class UserCreate(BaseModel):
@@ -129,6 +124,9 @@ class TransactionResponse(BaseModel):
 # FastAPI app
 app = FastAPI(title="Expense Tracker")
 templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+Base.metadata.create_all(bind=engine)
 
 @app.on_event("startup")
 async def on_startup():
@@ -152,32 +150,27 @@ def get_db():
 def seed_database():
     db = SessionLocal()
     try:
-        # Check if user exists
-        existing_user = db.query(User).filter(User.email == "test@example.com").first()
+        existing_user = db.query(User).filter(User.email == "test@example.com").first() # noqa
         if not existing_user:
-            # Create default user
             hashed_password = pwd_context.hash("password123")
             user = User(email="test@example.com", hashed_password=hashed_password)
             db.add(user)
             db.commit()
             db.refresh(user)
-            
-            # Create default categories
-            categories = [
+            default_categories = [
                 Category(name="Еда", user_id=user.id),
                 Category(name="Транспорт", user_id=user.id),
                 Category(name="Зарплата", user_id=user.id),
                 Category(name="Развлечения", user_id=user.id),
                 Category(name="Коммунальные услуги", user_id=user.id),
             ]
-            db.add_all(categories)
+            db.add_all(default_categories)
             db.commit()
             
             print("Database seeded successfully!")
     finally:
         db.close()
 
-# Seed on startup
 seed_database()
 
 # --- Exchange Rate Logic ---
@@ -294,28 +287,15 @@ async def login_page(request: Request):
 # API Routes - Auth
 @app.post("/api/auth/register")
 async def register(user_data: UserCreate, db: Session = Depends(get_db)):
-    # Check if user exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create user
     hashed_password = get_password_hash(user_data.password)
     user = User(email=user_data.email, hashed_password=hashed_password)
     db.add(user)
     db.commit()
     db.refresh(user)
-    
-    # Create default categories for new user
-    default_categories = [
-        Category(name="Еда", user_id=user.id),
-        Category(name="Транспорт", user_id=user.id),
-        Category(name="Зарплата", user_id=user.id),
-        Category(name="Развлечения", user_id=user.id),
-        Category(name="Коммунальные услуги", user_id=user.id),
-    ]
-    db.add_all(default_categories)
-    db.commit()
     
     return {"message": "User created successfully"}
 
@@ -382,7 +362,6 @@ async def delete_category(
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     
-    # Set category_id to NULL for all associated transactions
     db.query(Transaction).filter(
         Transaction.category_id == category_id,
         Transaction.user_id == user.id
@@ -436,11 +415,9 @@ async def get_transactions(
         query = query.filter(Transaction.created_at >= start_date)
 
     if end_date:
-        # Включаем весь день до 23:59:59
         end_of_day = datetime.combine(end_date, datetime.max.time())
         query = query.filter(Transaction.created_at <= end_of_day)
 
-    # Получаем общее количество для пагинации перед применением limit/offset
     total_count = query.count()
 
     transactions = query.order_by(Transaction.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
@@ -492,10 +469,8 @@ async def export_transactions(
     output = io.StringIO()
     writer = csv.writer(output)
 
-    # Write header
     writer.writerow(["Date", "Description", "Category", "Type", "Amount (USD)"])
 
-    # Write data rows
     for t in transactions:
         writer.writerow([
             t.created_at.strftime("%Y-%m-%d %H:%M:%S"),
@@ -514,7 +489,6 @@ async def create_transaction(
     user: User = Depends(require_auth),
     db: Session = Depends(get_db)
 ):
-    # Verify category belongs to user
     category = db.query(Category).filter(
         Category.id == transaction_data.category_id,
         Category.user_id == user.id
@@ -559,7 +533,6 @@ async def update_transaction(
     if not db_transaction:
         raise HTTPException(status_code=404, detail="Транзакция не найдена")
 
-    # Verify category belongs to user
     category = db.query(Category).filter(
         Category.id == transaction_data.category_id,
         Category.user_id == user.id
@@ -606,7 +579,6 @@ async def get_analytics(
     user: User = Depends(require_auth), 
     db: Session = Depends(get_db)
 ):
-    # Base queries
     income_query = db.query(func.sum(Transaction.amount)).filter(
         Transaction.user_id == user.id,
         Transaction.type == "income"
@@ -623,19 +595,16 @@ async def get_analytics(
         Transaction.type == "expense"
     )
 
-    # Apply date filters if provided
     if start_date:
         income_query = income_query.filter(Transaction.created_at >= start_date)
         expenses_query = expenses_query.filter(Transaction.created_at >= start_date)
         expenses_by_category_query = expenses_by_category_query.filter(Transaction.created_at >= start_date)
 
-    if end_date:
         end_of_day = datetime.combine(end_date, datetime.max.time())
         income_query = income_query.filter(Transaction.created_at <= end_of_day)
         expenses_query = expenses_query.filter(Transaction.created_at <= end_of_day)
         expenses_by_category_query = expenses_by_category_query.filter(Transaction.created_at <= end_of_day)
 
-    # Execute queries
     total_income = income_query.scalar() or 0
     total_expenses = expenses_query.scalar() or 0
     balance = total_income - total_expenses

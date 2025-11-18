@@ -86,11 +86,9 @@
     </div>
 
     <script>
-        // --- Configuration ---
-        const API_BASE_URL = ''; // TODO: Add your deployed API base URL here, e.g., 'https://api.example.com'
         const ENDPOINTS = {
-            login: `${API_BASE_URL}/api/auth/login`,
-            register: `${API_BASE_URL}/api/auth/register`,
+            login: '/api/auth/login',
+            register: '/api/auth/register',
         };
 
         // --- State ---
@@ -144,6 +142,7 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
             const endpoint = isLoginMode ? ENDPOINTS.login : ENDPOINTS.register;
 
             try {
